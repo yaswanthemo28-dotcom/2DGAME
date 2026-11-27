@@ -1,1 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ac56ce">
+  <title>EMO 🍬</title>
 
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap");
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 28px 12px;
+      font-family: "Fredoka", system-ui, sans-serif;
+      color: white;
+      background:
+        radial-gradient(circle at 15% 20%, #ffdf7066, transparent 35%),
+        radial-gradient(circle at 85% 80%, #8b5cf688, transparent 40%),
+        linear-gradient(145deg, #ff779d, #ac56ce 55%, #5b52c9);
+      overflow-x: hidden;
+    }
+
+    button {
+      font-family: inherit;
+    }
+
+    .bubble {
+      position: fixed;
+      border: 2px solid #ffffff25;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: float 9s ease-in-out infinite alternate;
+    }
+
+    .bubble-one {
+      width: 160px;
+      height: 160px;
+      left: -45px;
+      top: 10%;
+    }
+
+    .bubble-two {
+      width: 220px;
+      height: 220px;
+      right: -70px;
+      bottom: 5%;
+      animation-delay: -4s;
+    }
+
+    .game {
+      position: relative;
+      width: min(100%, 470px);
+      text-align: center;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 4px;
+      color: #ffe7a5;
+    }
+
+    h1 {
+      margin: 6px 0 4px;
+      font-size: clamp(60px, 15vw, 90px);
+      line-height: 1.1;
+      letter-spacing: 3px;
+      text-shadow:
+        0 5px 0 #7a349b55,
+        0 12px 30px #66287940;
+    }
+
+    .subtitle {
+      margin: 12px 0 22px;
+      color: #ffecfa;
+    }
+
+    .stats {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .stat {
+      flex: 1;
+      padding: 12px 6px;
+      border: 1px solid #ffffff40;
+      border-radius: 20px;
+      background: #ffffff18;
+      box-shadow: 0 8px 24px #56246715;
+    }
+
+    .stat span {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: #ffe0f3;
+    }
+
+    .stat strong {
+      font-size: 28px;
+    }
+
+    .progress-track {
+      height: 10px;
+      margin-bottom: 18px;
+      overflow: hidden;
+      border: 1px solid #ffffff30;
+      border-radius: 20px;
+      background: #652c8a40;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #ffdf70, #ff9fc8, #b3ffed);
+      transition: width 0.35s ease;
+    }
+
+    .board-wrap {
+      padding: 12px;
+      border: 2px solid #ffffff60;
+      border-radius: 28px;
+      background: #ffffff30;
+      box-shadow:
+        0 20px 50px #4b206955,
+        inset 0 2px 0 #ffffff50;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .candy {
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      aspect-ratio: 1;
+      padding: 0;
+      border: 0;
+      border-radius: 15px;
+      font-size: clamp(20px, 6vw, 35px);
+      cursor: pointer;
+      user-select: none;
+      touch-action: manipulation;
+      background: linear-gradient(145deg, var(--light), var(--dark));
+      box-shadow:
+        inset 0 3px 0 #ffffff65,
+        0 4px 0 #50215a35;
+      transition:
+        transform 0.16s,
+        filter 0.16s;
+    }
+
+    @media (hover: hover) {
+      .candy:hover {
+        transform: translateY(-3px);
+        filter: brightness(1.12);
+      }
+    }
+
+    .candy:focus-visible {
+      outline: 3px solid white;
+      outline-offset: 2px;
+    }
+
+    .candy.selected {
+      outline: 3px solid #fff9ac;
+      outline-offset: 1px;
+      transform: scale(0.9) rotate(-8deg);
+      filter: brightness(1.2);
+    }
+
+    .candy.pop {
+      animation: pop 0.28s ease-in forwards;
+    }
+
+    .candy.wrong {
+      animation: shake 0.25s;
+    }
+
+    .message {
+      min-height: 48px;
+      display: grid;
+      place-items: center;
+      margin: 14px 0 8px;
+      font-size: 19px;
+      color: #fff6b5;
+    }
+
+    .restart {
+      padding: 13px 28px;
+      border: 0;
+      border-radius: 99px;
+      color: #754093;
+      background: #fff0a8;
+      font-size: 17px;
+      font-weight: 600;
+      box-shadow: 0 5px 0 #dfb65f;
+      cursor: pointer;
+    }
+
+    .restart:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 #dfb65f;
+    }
+
+    .restart:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .hint {
+      margin-top: 20px;
+      font-size: 13px;
+      color: #ffe4f5;
+    }
+
+    .spark {
+      position: fixed;
+      z-index: 10;
+      pointer-events: none;
+      font-size: 22px;
+      animation: sparkle 0.65s ease-out forwards;
+    }
+
+    @keyframes pop {
+      45% {
+        transform: scale(1.18) rotate(12deg);
+      }
+
+      100% {
+        transform: scale(0);
+        opacity: 0;
+      }
+    }
+
+    @keyframes shake {
+      25%, 75% {
+        transform: translateX(-4px);
+      }
+
+      50% {
+        transform: translateX(4px);
+      }
+    }
+
+    @keyframes sparkle {
+      to {
+        transform:
+          translate(var(--x), var(--y))
+          rotate(140deg)
+          scale(0);
+        opacity: 0;
+      }
+    }
+
+    @keyframes float {
+      to {
+        transform: translateY(-35px) rotate(15deg);
+      }
+    }
+
+    @media (max-width: 360px) {
+      .board-wrap {
+        padding: 8px;
+      }
+
+      .board {
+        gap: 4px;
+      }
+
+      .candy {
+        border-radius: 11px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bubble bubble-one" aria-hidden="true"></div>
+  <div class="bubble bubble-two" aria-hidden="true"></div>
+
+  <main class="game">
+    <div class="eyebrow">A LITTLE SUGAR MAGIC</div>
+
+    <h1>EMO 🍬</h1>
+
+    <p class="subtitle">Tiny treats. Big combos.</p>
+
+    <div class="stats">
+      <div class="stat">
+        <span>SCORE</span>
+        <strong id="score">0</strong>
+      </div>
+
+      <div class="stat">
+        <span>MOVES</span>
+        <strong id="moves">20</strong>
+      </div>
+
+      <div class="stat">
+        <span>TARGET</span>
+        <strong>1500</strong>
+      </div>
+    </div>
+
+    <div
+      class="progress-track"
+      id="progress"
+      role="progressbar"
+      aria-label="Score toward target"
+      aria-valuemin="0"
+      aria-valuemax="1500"
+      aria-valuenow="0"
+    >
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+
+    <div class="board-wrap">
+      <div
+        class="board"
+        id="board"
+        role="group"
+        aria-label="Candy matching board"
+      ></div>
+    </div>
+
+    <p class="message" id="message" role="status" aria-live="polite">
+      Let’s make something sweet ✨
+    </p>
+
+    <button class="restart" id="restart" type="button">
+      New batch ↻
+    </button>
+
+    <p class="hint">
+      Swap neighbors · Match 3+ · Chase a cascade
+    </p>
+  </main>
+
+  <script>
+    const treats = [
+      {
+        icon: "🍓",
+        name: "strawberry",
+        light: "#ff9caf",
+        dark: "#f45380"
+      },
+      {
+        icon: "🍋",
+        name: "lemon",
+        light: "#fff59a",
+        dark: "#ffc852"
+      },
+      {
+        icon: "🍇",
+        name: "grapes",
+        light: "#dab0ff",
+        dark: "#ac73e8"
+      },
+      {
+        icon: "🍬",
+        name: "candy",
+        light: "#9aeafb",
+        dark: "#54bcdf"
+      },
+      {
+        icon: "🍊",
+        name: "orange",
+        light: "#ffd09a",
+        dark: "#ff985e"
+      },
+      {
+        icon: "🥝",
+        name: "kiwi",
+        light: "#c5f6a0",
+        dark: "#7dcf83"
+      }
+    ];
+
+    const SIZE = 7;
+    const TARGET = 1500;
+    const STARTING_MOVES = 20;
+
+    const board = document.querySelector("#board");
+    const scoreElement = document.querySelector("#score");
+    const movesElement = document.querySelector("#moves");
+    const message = document.querySelector("#message");
+    const restart = document.querySelector("#restart");
+    const progress = document.querySelector("#progress");
+    const progressFill = document.querySelector("#progress-fill");
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    );
+
+    let cells = [];
+    let selected = null;
+    let score = 0;
+    let moves = STARTING_MOVES;
+    let busy = false;
+
+    function randomCandy() {
+      return Math.floor(Math.random() * treats.length);
+    }
+
+    function pause(milliseconds) {
+      return new Promise(resolve => {
+        setTimeout(resolve, reducedMotion.matches ? 0 : milliseconds);
+      });
+    }
+
+    function updateStats() {
+      scoreElement.textContent = score;
+      movesElement.textContent = moves;
+
+      const percentage = Math.min((score / TARGET) * 100, 100);
+
+      progressFill.style.width = `${percentage}%`;
+      progress.setAttribute("aria-valuenow", Math.min(score, TARGET));
+      progress.setAttribute(
+        "aria-valuetext",
+        `${score} of ${TARGET} points`
+      );
+    }
+
+    function render() {
+      // Preserve keyboard focus when the buttons are rebuilt.
+      const focusedIndex = [...board.children].indexOf(
+        document.activeElement
+      );
+
+      board.replaceChildren();
+
+      cells.forEach((value, index) => {
+        const candy = treats[value];
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.className =
+          "candy" + (selected === index ? " selected" : "");
+
+        button.textContent = candy.icon;
+        button.style.setProperty("--light", candy.light);
+        button.style.setProperty("--dark", candy.dark);
+
+        const row = Math.floor(index / SIZE) + 1;
+        const column = (index % SIZE) + 1;
+
+        button.setAttribute(
+          "aria-label",
+          `${candy.name}, row ${row}, column ${column}`
+        );
+
+        button.setAttribute(
+          "aria-pressed",
+          String(selected === index)
+        );
+
+        button.addEventListener("click", () => choose(index));
+        board.append(button);
+      });
+
+      updateStats();
+
+      if (focusedIndex >= 0) {
+        board.children[focusedIndex]?.focus({ preventScroll: true });
+      }
+    }
+
+    function findMatches() {
+      const matched = new Set();
+
+      for (let row = 0; row < SIZE; row++) {
+        for (let column = 0; column < SIZE; column++) {
+          const index = row * SIZE + column;
+
+          if (
+            column < SIZE - 2 &&
+            cells[index] === cells[index + 1] &&
+            cells[index] === cells[index + 2]
+          ) {
+            matched.add(index);
+            matched.add(index + 1);
+            matched.add(index + 2);
+          }
+
+          if (
+            row < SIZE - 2 &&
+            cells[index] === cells[index + SIZE] &&
+            cells[index] === cells[index + SIZE * 2]
+          ) {
+            matched.add(index);
+            matched.add(index + SIZE);
+            matched.add(index + SIZE * 2);
+          }
+        }
+      }
+
+      return [...matched];
+    }
+
+    function swap(first, second) {
+      [cells[first], cells[second]] = [cells[second], cells[first]];
+    }
+
+    function hasMove() {
+      for (let index = 0; index < cells.length; index++) {
+        const neighbors = [];
+
+        if (index % SIZE < SIZE - 1) {
+          neighbors.push(index + 1);
+        }
+
+        if (index + SIZE < cells.length) {
+          neighbors.push(index + SIZE);
+        }
+
+        for (const neighbor of neighbors) {
+          swap(index, neighbor);
+          const possible = findMatches().length > 0;
+          swap(index, neighbor);
+
+          if (possible) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }
+
+    function freshBoard() {
+      do {
+        cells = [];
+
+        for (let index = 0; index < SIZE * SIZE; index++) {
+          let value;
+
+          do {
+            value = randomCandy();
+          } while (
+            (
+              index % SIZE >= 2 &&
+              cells[index - 1] === value &&
+              cells[index - 2] === value
+            ) ||
+            (
+              index >= SIZE * 2 &&
+              cells[index - SIZE] === value &&
+              cells[index - SIZE * 2] === value
+            )
+          );
+
+          cells.push(value);
+        }
+      } while (!hasMove());
+    }
+
+    function sparkle(element) {
+      if (reducedMotion.matches) {
+        return;
+      }
+
+      const rectangle = element.getBoundingClientRect();
+      const icons = ["✨", "⭐", "💖"];
+
+      for (let count = 0; count < 4; count++) {
+        const particle = document.createElement("span");
+
+        particle.className = "spark";
+        particle.textContent = icons[count % icons.length];
+        particle.setAttribute("aria-hidden", "true");
+
+        particle.style.left =
+          `${rectangle.left + rectangle.width / 2}px`;
+
+        particle.style.top =
+          `${rectangle.top + rectangle.height / 2}px`;
+
+        particle.style.setProperty(
+          "--x",
+          `${(Math.random() - 0.5) * 130}px`
+        );
+
+        particle.style.setProperty(
+          "--y",
+          `${-30 - Math.random() * 100}px`
+        );
+
+        document.body.append(particle);
+        setTimeout(() => particle.remove(), 700);
+      }
+    }
+
+    function refillBoard(matches) {
+      matches.forEach(index => {
+        cells[index] = null;
+      });
+
+      for (let column = 0; column < SIZE; column++) {
+        const remaining = [];
+
+        for (let row = 0; row < SIZE; row++) {
+          const value = cells[row * SIZE + column];
+
+          if (value !== null) {
+            remaining.push(value);
+          }
+        }
+
+        while (remaining.length < SIZE) {
+          remaining.unshift(randomCandy());
+        }
+
+        for (let row = 0; row < SIZE; row++) {
+          cells[row * SIZE + column] = remaining[row];
+        }
+      }
+    }
+
+    async function choose(index) {
+      if (busy || moves === 0) {
+        return;
+      }
+
+      if (selected === null) {
+        selected = index;
+        render();
+        return;
+      }
+
+      if (selected === index) {
+        selected = null;
+        render();
+        return;
+      }
+
+      const previous = selected;
+
+      const rowDistance = Math.abs(
+        Math.floor(previous / SIZE) - Math.floor(index / SIZE)
+      );
+
+      const columnDistance = Math.abs(
+        previous % SIZE - index % SIZE
+      );
+
+      if (rowDistance + columnDistance !== 1) {
+        selected = index;
+        render();
+        return;
+      }
+
+      busy = true;
+      restart.disabled = true;
+      selected = null;
+
+      try {
+        swap(previous, index);
+        render();
+
+        let matches = findMatches();
+
+        if (matches.length === 0) {
+          board.children[previous].classList.add("wrong");
+          board.children[index].classList.add("wrong");
+
+          message.textContent = "Try another pair 🍭";
+
+          await pause(280);
+
+          swap(previous, index);
+          render();
+          return;
+        }
+
+        moves--;
+        let combo = 0;
+
+        while (matches.length > 0) {
+          combo++;
+
+          const earned = matches.length * 10 * combo;
+          score += earned;
+          updateStats();
+
+          message.textContent = combo > 1
+            ? `Sweet cascade! ×${combo} · +${earned} 🌈`
+            : `Sugar rush! +${earned} ✨`;
+
+          for (const matchedIndex of matches) {
+            const element = board.children[matchedIndex];
+
+            element.classList.add("pop");
+            sparkle(element);
+          }
+
+          await pause(300);
+
+          refillBoard(matches);
+          render();
+
+          await pause(180);
+
+          matches = findMatches();
+        }
+
+        if (moves === 0) {
+          message.textContent = score >= TARGET
+            ? "You’re an EMO superstar! 🏆"
+            : `You scored ${score}! Try another batch 🍨`;
+        } else if (!hasMove()) {
+          freshBoard();
+          render();
+          message.textContent = "Fresh candy shuffle! 🍬";
+        } else if (score >= TARGET) {
+          message.textContent = "Target reached! Keep the magic going 🏆";
+        }
+      } finally {
+        busy = false;
+        restart.disabled = false;
+      }
+    }
+
+    function start() {
+      if (busy) {
+        return;
+      }
+
+      selected = null;
+      score = 0;
+      moves = STARTING_MOVES;
+
+      freshBoard();
+      render();
+
+      message.textContent = "Let’s make something sweet ✨";
+    }
+
+    restart.addEventListener("click", start);
+
+    start();
+  </script>
+</body>
+</html>
